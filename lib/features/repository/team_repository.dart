@@ -14,21 +14,16 @@ class TeamRepository {
   Stream<ResponseData> getListTeam() =>
       _dataSource.footballTeamsApi().map(_mapToJson).map((event) {
         ResponseData response = ResponseData.fromJson(event);
-        log('cekk 5 $response');
         return response;
       });
 
   _mapToJson(Response<String> event) {
     try {
-      log('cekk 1 ${jsonDecode(event.data!)}');
       return jsonDecode(event.data!);
     } catch (e) {
-      log('cekk 2 $event');
       if (AppsConst.isDebuggable) {
-        log('cekk 3 $event');
         throw Exception(e);
       } else {
-        log('cekk 4 $event');
         throw Exception(TeamDataSource.errorMsgHandler);
       }
     }

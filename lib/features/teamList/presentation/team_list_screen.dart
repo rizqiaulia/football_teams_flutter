@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -18,14 +20,14 @@ class TeamListScreen extends StatefulWidget {
 class _TeamListScreenState extends State<TeamListScreen> {
   late TeamListCubit _cubit;
   List<TeamsModel>? listTeam;
-  List<TeamsModel>? searchResult;
-  late bool _isSearching;
+  final List<TeamsModel> duplicateTeam = [];
+
   Icon customIcon = const Icon(Icons.search);
   Widget appBarTitle = const Text('Spanish La Liga');
+  final myController = TextEditingController();
 
   @override
   void initState() {
-    _isSearching = false;
     _cubit = TeamListCubit(get())..getTeam();
     super.initState();
   }
@@ -46,8 +48,8 @@ class _TeamListScreenState extends State<TeamListScreen> {
             onPressed: () {
               setState(() {
                 if (customIcon.icon == Icons.search) {
-                  customIcon = const Icon(Icons.cancel);
-                  appBarTitle = const ListTile(
+                  customIcon =  Icon(Icons.cancel);
+                  appBarTitle =  ListTile(
                     leading: Icon(
                       Icons.search,
                       color: Colors.white,
@@ -55,25 +57,20 @@ class _TeamListScreenState extends State<TeamListScreen> {
                     ),
                     title: TextField(
                       decoration: InputDecoration(
-                        hintText: "Type team name",
-                        hintStyle: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontStyle: FontStyle.italic,
-                        ),
-                        border: InputBorder.none
-                      ),
-                      style: TextStyle(
-                        color: Colors.white
-                      ),
-
+                          hintText: "Type team name",
+                          hintStyle: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontStyle: FontStyle.italic,
+                          ),
+                          border: InputBorder.none),
+                      style: TextStyle(color: Colors.white),
+                      onChanged: (value) => _runFilter(value),
                     ),
                   );
-                  _isSearching = true;
                 } else {
                   customIcon = const Icon(Icons.search);
                   appBarTitle = const Text('Spanish La Liga');
-                  _isSearching = false;
                 }
               });
             },
@@ -111,14 +108,16 @@ class _TeamListScreenState extends State<TeamListScreen> {
         crossAxisCount: 2,
         childAspectRatio: 1.0,
         padding: EdgeInsets.all(8.0),
-        mainAxisSpacing: 8.0,
-        crossAxisSpacing: 8.0,
-        children: teams!.map((team) => _itemTeam(context, team)).toList());
+    mainAxisSpacing: 8.0,
+    crossAxisSpacing: 8.0,
+    children:
+    teams!.map((team) => _itemTeam(context, team)).toList());
   }
 
   Widget _itemTeam(BuildContext context, TeamsModel team) {
     return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, AppRoute.teamDetailScreen,arguments:team),
+      onTap: () => Navigator.pushNamed(context, AppRoute.teamDetailScreen,
+          arguments: team),
       child: GridTile(
         child: Hero(
           tag: team.strAlternate!,
@@ -135,8 +134,22 @@ class _TeamListScreenState extends State<TeamListScreen> {
     );
   }
 
-  void searchOperation(String searchText) {
+  void _runFilter(String enteredKeyword) {
+    List<TeamsModel> results = [];
+    if (enteredKeyword.isEmpty) {
+      // if the search field is empty or only contains white-space, we'll display all users
+      results = duplicateTeam;
+    } else {
+      results = listTeam!.where((team) => team.strTeam!.toLowerCase().contains(enteredKeyword.toLowerCase())).toList();
+      // we use the toLowerCase() method to make it case-insensitive
+    }
 
-
+    // Refresh the UI
+    setState(() {
+      listTeam!.clear();
+      listTeam!.addAll(results);
+    });
   }
+
+
 }
